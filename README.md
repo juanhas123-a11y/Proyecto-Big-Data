@@ -66,6 +66,8 @@ Verifica los totales consolidados (Requiere credenciales configuradas):
 docker exec -it clickhouse_dw clickhouse-client --user default --password 1234 -q "SELECT * FROM ventas_resumen FORMAT PrettyCompact;"
 ```
 
+**Nota:** Estos comandos se ejecutan directamente en la terminal de tu sistema operativo (Windows/Linux/Mac), no dentro de Jupyter. Asegúrate de que `docker-compose up` se haya ejecutado correctamente antes de probarlos.
+
 ---
 
 ## ⚠️ Notas de Implementación (Solución de Problemas)
