@@ -1,4 +1,4 @@
-pyspark
-cassandra-driver
-clickhouse-driver
 pandas
+numpy
+cassandra-driver
+clickhouse-connect
