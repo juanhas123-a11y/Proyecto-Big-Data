@@ -1,75 +1,77 @@
-# 🚀 Pipeline de Big Data: Del Origen al Análisis (UNEG)
+# 🚀 Pipeline de Big Data: De Cassandra a ClickHouse (UNEG)
 
-Este proyecto implementa un ecosistema completo de Big Data. Procesa **100,000 registros** desde un almacenamiento NoSQL (**Cassandra**) hasta un Data Warehouse analítico (**ClickHouse**) usando **Apache Spark**.
-
----
-
-## 🛠️ Paso 1: Instalación de Herramientas (Si no tienes nada)
-
-Si tu computadora está "limpia", debes instalar lo siguiente en este orden:
-
-1. **Docker Desktop:** [Descargar aquí](https://www.docker.com/products/docker-desktop/). Es el motor que correrá las bases de datos.
-2. **Python 3.10+:** [Descargar aquí](https://www.python.org/downloads/). Asegúrate de marcar la casilla **"Add Python to PATH"** durante la instalación.
-3. **Java JDK 11:** [Descargar aquí](https://www.oracle.com/java/technologies/downloads/). Necesario para que Spark funcione.
+Este proyecto implementa un ecosistema de datos completo diseñado para manejar volúmenes masivos. Automatiza el flujo de **100,000 registros** desde un almacenamiento NoSQL de alta disponibilidad (**Cassandra**) hacia un motor OLAP optimizado para analítica (**ClickHouse**).
 
 ---
 
-## 🚀 Paso 2: Configuración del Proyecto
+## 🏗️ Arquitectura del Sistema
 
-1. **Clonar el repositorio:** Descarga este proyecto como ZIP y extráelo, o usa `git clone`.
-2. **Levantar las Bases de Datos:** Abre una terminal (PowerShell o CMD) dentro de la carpeta del proyecto y ejecuta:
+El pipeline sigue una arquitectura de tres capas diseñada para la eficiencia:
+
+1. **Capa de Ingesta (Data Lake):** **Apache Cassandra** recibe datos atómicos (IDs, precios, fechas) simulando una base de datos transaccional de alta velocidad.
+2. **Capa de Procesamiento (ETL):** Un motor de **Python + Pandas** (con parches de compatibilidad para Python 3.13) extrae, limpia y agrega los datos, transformando registros crudos en métricas de negocio.
+3. **Capa Analítica (Data Warehouse):** **ClickHouse** almacena los datos procesados, permitiendo consultas complejas y reportes gerenciales en milisegundos.
+
+---
+
+## 🛠️ Requisitos Previos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+1. **Docker Desktop:** Esencial para orquestar los contenedores de las bases de datos.
+2. **Python 3.10+:** Lenguaje base del pipeline.
+3. **Bibliotecas de Python:**
    ```bash
-   docker-compose up -d
-   ```
-   Espera 1 minuto a que los motores arranquen por completo.
-3. **Instalar conectores de Python:** En la misma terminal, ejecuta:
-   ```bash
-   pip install -r requirements.txt
+   pip install cassandra-driver clickhouse-connect pandas numpy
    ```
 
 ---
 
-## 📑 Paso 3: Ejecución del Pipeline (Jupyter)
+## 🚀 Configuración y Ejecución
 
-Abre el archivo `.ipynb` con Jupyter Notebook o VS Code. Ejecuta todas las celdas en orden.
+### 1. Levantar Infraestructura
 
-El script automáticamente:
-- Creará los datos en Cassandra.
-- Los procesará con Spark.
-- Los cargará refinados en ClickHouse.
+Desde la raíz del proyecto, ejecuta:
+```bash
+docker-compose up -d
+```
+**Nota:** El contenedor de Cassandra puede tardar hasta 45 segundos en estar listo para recibir conexiones.
+
+### 2. Ejecución del Pipeline
+
+Abre el archivo `Pipeline_BigData_UNEG.ipynb` y ejecuta las celdas en orden. El flujo realizará:
+
+- Configuración de seguridad y parches de compatibilidad.
+- Creación de esquemas en Cassandra y ClickHouse.
+- Generación e ingesta masiva de 100,000 registros.
+- Cálculo de agregaciones y carga en el Data Warehouse.
 
 ---
 
-## 📊 Paso 4: ¿Cómo ver las tablas resultantes?
+## 📊 Validación de Datos
 
-Para verificar que todo funcionó, usaremos la terminal para entrar a los contenedores y consultar las tablas:
+Para verificar la integridad de los datos en cada etapa:
 
-### A. Ver Datos Crudos (Cassandra)
+### A. Auditoría en Cassandra (Datos Crudos)
 
-Aquí están los 100,000 registros originales. Ejecuta en tu terminal:
+Verifica que los registros individuales existan con el formato correcto:
 ```bash
-docker exec -it cassandra_db cqlsh -e "SELECT * FROM proyecto_bigdata.ventas LIMIT 10;"
+docker exec -it cassandra_db cqlsh -e "SELECT * FROM proyecto_bigdata.ventas_crudas LIMIT 5;"
 ```
 
-### B. Ver Resumen Analítico (ClickHouse)
+### B. Auditoría en ClickHouse (Reporte Final)
 
-Aquí verás el resultado del procesamiento de Spark (Ventas totales por categoría). Ejecuta:
+Verifica los totales consolidados (Requiere credenciales configuradas):
 ```bash
-docker exec -it clickhouse_dw clickhouse-client -q "SELECT * FROM ventas_resumen ORDER BY total_ventas DESC FORMAT PrettyCompact;"
+docker exec -it clickhouse_dw clickhouse-client --user default --password 1234 -q "SELECT * FROM ventas_resumen FORMAT PrettyCompact;"
 ```
 
 ---
 
-## 🏗️ Resumen de la Arquitectura
+## ⚠️ Notas de Implementación (Solución de Problemas)
 
-- **Capa 1 (Ingesta):** Cassandra recibe los datos crudos (Escritura rápida).
-- **Capa 2 (Procesamiento):** Spark limpia duplicados y agrupa categorías.
-- **Capa 3 (Servicio):** ClickHouse almacena el resumen para reportes (Lectura rápida).
+- **Compatibilidad Python 3.13:** El proyecto incluye un "Mock" del módulo asyncore para evitar errores de importación en el driver de Cassandra en versiones modernas de Python.
+- **Seguridad:** ClickHouse está configurado con autenticación (user: default, pass: 1234).
+- **Memoria:** Si Docker falla al iniciar, aumenta el límite de RAM en Docker Desktop -> Settings -> Resources (Se recomiendan al menos 4GB).
 
----
-
-## ⚠️ Solución de Errores Comunes
-
-- **"Connection Refused":** Cassandra aún está cargando. Espera 30 segundos y reintenta.
-- **"Java not found":** Verifica que instalaste el JDK y reiniciaste tu terminal.
-- **Docker lento:** Asegúrate de tener al menos 4GB de RAM asignados a Docker en Settings -> Resources.
+Proyecto desarrollado para la cátedra de Big Data - UNEG.
