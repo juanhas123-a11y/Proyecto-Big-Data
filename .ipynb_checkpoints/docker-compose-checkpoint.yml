@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  cassandra_db:
+    image: cassandra:4.1
+    container_name: cassandra_db
+    ports:
+      - "9042:9042"
+
+  clickhouse_dw:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse_dw
+    ports:
+      - "8123:8123"
+
+  jupyter_spark:
+    image: jupyter/pyspark-notebook:latest
+    container_name: jupyter_spark
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_TOKEN=ueng2025
