@@ -5,13 +5,13 @@ services:
     image: cassandra:4.1
     container_name: cassandra_db
     ports:
-      - "9042:9042"
+      - "9043:9042"
 
   clickhouse_dw:
     image: clickhouse/clickhouse-server:latest
     container_name: clickhouse_dw
     ports:
-      - "8123:8123"
+      - "9042:9042" 
 
   jupyter_spark:
     image: jupyter/pyspark-notebook:latest
@@ -20,3 +20,5 @@ services:
       - "8888:8888"
     environment:
       - JUPYTER_TOKEN=ueng2025
+    volumes:
+      - .:/home/jovyan/work
