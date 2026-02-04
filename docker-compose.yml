@@ -6,12 +6,15 @@ services:
     container_name: cassandra_db
     ports:
       - "9043:9042"
+    volumes:
+      - ./cassandra_data:/var/lib/cassandra  
 
   clickhouse_dw:
     image: clickhouse/clickhouse-server:latest
     container_name: clickhouse_dw
     ports:
-      - "9042:9042" 
+      - "8123:8123" # Puerto HTTP/JDBC corregido
+      - "9000:9000" # Puerto nativo (opcional, por si acaso)
 
   jupyter_spark:
     image: jupyter/pyspark-notebook:latest
@@ -22,3 +25,7 @@ services:
       - JUPYTER_TOKEN=ueng2025
     volumes:
       - .:/home/jovyan/work
+      - ./clickhouse-jdbc.jar:/usr/local/spark/jars/clickhouse-jdbc.jar
+    depends_on:
+      - cassandra_db
+      - clickhouse_dw
